@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const logoutBtn = document.getElementById('logout-btn');
-    const refreshBtn = document.getElementById('refresh-btn');
     const changeForm = document.getElementById('change-password-form');
 
     // clear local tokens and return to login
@@ -35,27 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // even if the server rejects the token, drop the local session
             console.warn('[logout]', error.message);
         } finally {
-            clearSession();
-        }
-    });
-
-    // POST /auth/refresh -> rotates the token pair (TokenResponse)
-    refreshBtn?.addEventListener('click', async () => {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) return clearSession();
-
-        try {
-            const tokens = await apiRequest('/auth/refresh', {
-                method: 'POST',
-                body: JSON.stringify({ refresh_token: refreshToken }),
-            });
-            localStorage.setItem('access_token', tokens.access_token);
-            localStorage.setItem('refresh_token', tokens.refresh_token);
-            // the new token may carry updated roles -> re-resolve gated content
-            applyRoleVisibility();
-            alert('Session refreshed.');
-        } catch (error) {
-            // expired/invalid refresh token -> force re-login
             clearSession();
         }
     });
