@@ -2,15 +2,15 @@ import time
 from .limiter import Decision
 
 class TokenBucket:
-    def __init__(self, storage, capacity, refill_rate):
+    def __init__(self, storage, capacity, refill_rate, now=time.monotonic):
         self._storage = storage
         self._capacity = capacity
         self._refill_rate = refill_rate
+        self._now = now
 
     async def check(self, key, cost=1): 
-        now = time.monotonic() 
-
         async with self._storage.lock:
+            now = self._now()
             state = await self._storage.get(key)
 
             if state is None:

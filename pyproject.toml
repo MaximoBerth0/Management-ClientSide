@@ -9,7 +9,10 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "redis (>=8.0.1,<9.0.0)",
-    "fastapi (>=0.138.1,<0.139.0)"
+    "fastapi (>=0.138.1,<0.139.0)",
+    "pytest (>=9.1.1,<10.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "pytest-asyncio (>=1.4.0,<2.0.0)"
 ]
 
 
@@ -19,3 +22,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 package-mode = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
