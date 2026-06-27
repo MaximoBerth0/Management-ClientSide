@@ -1,6 +1,8 @@
 import asyncio
 
 import pytest
+from redis.asyncio import Redis
+from testcontainers.redis import RedisContainer
 
 from fasthelm.core.token_bucket import TokenBucket
 
@@ -41,5 +43,32 @@ def make_bucket(clock):
 
 @pytest.fixture
 def bucket(make_bucket):
-    """A ready-to-use bucket: capacity=3, refill_rate=1.0/sec."""
+    """A ready-to-use bucket capacity=3, refill_rate=1.0/sec."""
     return make_bucket()
+
+
+# real-redis fixtures (used by test_redis.py)
+
+
+@pytest.fixture(scope="session")
+def redis_container():
+    """Start one real redis:7 container for the whole test session."""
+    with RedisContainer("redis:7") as container:
+        yield container
+
+
+@pytest.fixture
+async def redis_client(redis_container):
+    """A fresh async client per test, with the DB flushed beforehand.
+
+    decode_responses=True so the Lua script's tostring(tokens) comes back as
+    str (RedisTokenBucket does float(tokens_str), which rejects bytes).
+    """
+    host = redis_container.get_container_host_ip()
+    port = int(redis_container.get_exposed_port(6379))
+    client = Redis(host=host, port=port, decode_responses=True)
+    await client.flushdb()
+    try:
+        yield client
+    finally:
+        await client.aclose()
